@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import type { Group, Match } from './types';
+import { normalizeGroups } from './validate';
 
 /**
  * Almacenamiento en archivos.
@@ -31,7 +32,7 @@ async function writeAtomic(file: string, data: Buffer | string): Promise<void> {
 }
 
 function defaultGroups(): Group[] {
-  return ['A', 'B', 'C', 'D'].map((l) => ({ title: `Grupo ${l}`, teams: ['', '', '', ''] }));
+  return ['A', 'B', 'C', 'D'].map((l) => ({ title: `Grupo ${l}`, matches: [] }));
 }
 
 function defaultBracket(): Match[] {
@@ -54,7 +55,8 @@ async function readJson<T>(file: string, fallback: () => T): Promise<T> {
 }
 
 // ---- Grupos y cruces (el slug se valida antes contra la lista de categorías) ----
-export const getGroups = (slug: string) => readJson<Group[]>(`groups-${slug}.json`, defaultGroups);
+export const getGroups = async (slug: string): Promise<Group[]> =>
+  normalizeGroups(await readJson<unknown>(`groups-${slug}.json`, defaultGroups)) ?? defaultGroups();
 export const setGroups = (slug: string, groups: Group[]) =>
   writeAtomic(`groups-${slug}.json`, JSON.stringify(groups, null, 2));
 

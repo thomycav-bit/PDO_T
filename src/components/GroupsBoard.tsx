@@ -2,11 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Group } from '@/lib/types';
+import type { Group, GroupMatch } from '@/lib/types';
+import { emptyMatch } from '@/lib/validate';
 import { useAuth } from './AuthProvider';
+import { GroupMatchCard } from './GroupMatchCard';
+import { GroupMatchEditor } from './GroupMatchEditor';
 import { PageHeader } from './PageHeader';
 
-const clone = (groups: Group[]): Group[] => groups.map((g) => ({ title: g.title, teams: [...g.teams] }));
+const clone = (groups: Group[]): Group[] =>
+  groups.map((g) => ({
+    title: g.title,
+    matches: g.matches.map((m) => ({ ...m, sets: m.sets.map((s) => ({ ...s })) })),
+  }));
 const nextTitle = (n: number) => `Grupo ${n < 26 ? String.fromCharCode(65 + n) : n + 1}`;
 
 export function GroupsBoard({ slug, title, initial }: { slug: string; title: string; initial: Group[] }) {
@@ -46,10 +53,14 @@ export function GroupsBoard({ slug, title, initial }: { slug: string; title: str
   const setTitle = (i: number, value: string) =>
     setDraft((d) => d.map((g, k) => (k === i ? { ...g, title: value } : g)));
 
-  const setTeam = (i: number, j: number, value: string) =>
-    setDraft((d) => d.map((g, k) => (k === i ? { ...g, teams: g.teams.map((t, m) => (m === j ? value : t)) } : g)));
+  const updateMatches = (i: number, fn: (matches: GroupMatch[]) => GroupMatch[]) =>
+    setDraft((d) => d.map((g, k) => (k === i ? { ...g, matches: fn(g.matches) } : g)));
+  const setMatch = (i: number, j: number, value: GroupMatch) =>
+    updateMatches(i, (ms) => ms.map((m, k) => (k === j ? value : m)));
+  const addMatch = (i: number) => updateMatches(i, (ms) => [...ms, emptyMatch()]);
+  const removeMatch = (i: number, j: number) => updateMatches(i, (ms) => ms.filter((_, k) => k !== j));
 
-  const addGroup = () => setDraft((d) => [...d, { title: nextTitle(d.length), teams: ['', '', '', ''] }]);
+  const addGroup = () => setDraft((d) => [...d, { title: nextTitle(d.length), matches: [] }]);
   const removeGroup = (i: number) => setDraft((d) => (d.length <= 1 ? d : d.filter((_, k) => k !== i)));
 
   async function save() {
@@ -120,31 +131,30 @@ export function GroupsBoard({ slug, title, initial }: { slug: string; title: str
                     maxLength={60}
                     onChange={(e) => setTitle(i, e.target.value)}
                   />
-                  {g.teams.map((t, j) => (
-                    <input
-                      key={j}
-                      className="slot-input"
-                      value={t}
-                      placeholder="Nombre de la pareja"
-                      maxLength={120}
-                      onChange={(e) => setTeam(i, j, e.target.value)}
-                    />
-                  ))}
+                  <div className="gm-list">
+                    {g.matches.map((m, j) => (
+                      <GroupMatchEditor
+                        key={j}
+                        match={m}
+                        onChange={(value) => setMatch(i, j, value)}
+                        onRemove={() => removeMatch(i, j)}
+                      />
+                    ))}
+                    <button type="button" className="add-gm" onClick={() => addMatch(i)}>
+                      + Agregar partido
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
                   <h2 className="card-title">{g.title}</h2>
-                  {g.teams.map((t, j) =>
-                    t.trim() ? (
-                      <div className="slot" key={j}>
-                        {t}
-                      </div>
+                  <div className="gm-list">
+                    {g.matches.length === 0 ? (
+                      <p className="gm-empty">Partidos por definir</p>
                     ) : (
-                      <div className="slot empty" key={j}>
-                        Por definir
-                      </div>
-                    ),
-                  )}
+                      g.matches.map((m, j) => <GroupMatchCard key={j} match={m} />)
+                    )}
+                  </div>
                 </>
               )}
             </article>

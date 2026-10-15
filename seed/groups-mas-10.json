@@ -1,38 +1,18 @@
 [
   {
     "title": "Grupo A",
-    "teams": [
-      "",
-      "",
-      "",
-      ""
-    ]
+    "matches": []
   },
   {
     "title": "Grupo B",
-    "teams": [
-      "",
-      "",
-      "",
-      ""
-    ]
+    "matches": []
   },
   {
     "title": "Grupo C",
-    "teams": [
-      "",
-      "",
-      "",
-      ""
-    ]
+    "matches": []
   },
   {
     "title": "Grupo D",
-    "teams": [
-      "",
-      "",
-      "",
-      ""
-    ]
+    "matches": []
   }
 ]
