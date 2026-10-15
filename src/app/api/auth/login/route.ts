@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   }
   if (!sessionSecretConfigured()) {
     return NextResponse.json(
-      { error: 'El servidor no está configurado: falta SESSION_SECRET.' },
+      { error: 'El servidor no está configurado: SESSION_SECRET falta o es muy corta (mínimo 16 caracteres).' },
       { status: 500 },
     );
   }
