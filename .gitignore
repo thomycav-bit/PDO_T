@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+*.tsbuildinfo
+.env
+.env*.local
+# Datos editados desde el panel (los valores iniciales están en /seed)
+/data
+.DS_Store
